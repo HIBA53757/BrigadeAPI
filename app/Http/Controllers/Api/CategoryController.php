@@ -4,18 +4,20 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Category;
+use App\Models\Plat;
 use Illuminate\Http\Request;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+
 
 class CategoryController extends Controller
 {
-    // Lister les catégories de l'utilisateur connecté
+    use AuthorizesRequests;
     public function index()
     {
         $categories = Category::where('user_id', auth()->id())->get();
         return response()->json($categories);
     }
 
-    // Créer une catégorie
     public function store(Request $request)
     {
         $request->validate([
@@ -30,13 +32,11 @@ class CategoryController extends Controller
         return response()->json($category, 201);
     }
 
-    // Afficher une catégorie spécifique
     public function show(Category $category)
     {
         return response()->json($category);
     }
 
-    // Modifier une catégorie
     public function update(Request $request, Category $category)
     {
         $this->authorize('update', $category);
@@ -56,17 +56,27 @@ class CategoryController extends Controller
         return response()->json(['message' => 'Category deleted']);
     }
 
-    // Associer des plats à une catégorie
-    public function addPlats(Request $request, Category $category)
-    {
-        $this->authorize('update', $category);
-
-        $request->validate([
-            'plats' => 'required|array'
-        ]);
-
-        $category->plats()->sync($request->plats);
-
-        return response()->json(['message' => 'Plats added to category']);
+   
+  public function addPlats(Request $request, Category $category)
+{
+   
+    if ($category->user_id !== auth()->id()) {
+        return response()->json(['message' => 'Unauthorized'], 403);
     }
+
+    $request->validate([
+        'plats' => 'required|array',
+        'plats.*' => 'exists:plats,id'
+    ]);
+
+    
+    Plat::whereIn('id', $request->plats)
+        ->where('user_id', auth()->id()) 
+        ->update(['category_id' => $category->id]);
+
+    return response()->json([
+        'message' => 'Plats associés à la catégorie avec succès',
+        'category' => $category->load('plats')
+    ]);
+}
 }

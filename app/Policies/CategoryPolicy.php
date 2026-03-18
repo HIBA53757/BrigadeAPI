@@ -4,17 +4,51 @@ namespace App\Policies;
 
 use App\Models\Category;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
+use Illuminate\Auth\Access\HandlesAuthorization;
 
 class CategoryPolicy
 {
-    public function update(User $user, Category $category)
+    use HandlesAuthorization;
+
+  
+    public function viewAny(User $user): bool
     {
-        return $user->id === $category->user_id;
+       
+        return true;
     }
 
-    public function delete(User $user, Category $category)
+   
+    public function view(User $user, Category $category): bool
     {
-        return $user->id === $category->user_id;
+        
+        return true;
+    }
+
+   
+    public function create(User $user): bool
+    {
+        return $user->role === 'admin';
+    }
+
+   
+    public function update(User $user, Category $category): bool
+    {
+        return $user->role === 'admin' && $user->id === $category->user_id;
+    }
+
+    public function delete(User $user, Category $category): bool
+    {
+       
+        return $user->role === 'admin' && $user->id === $category->user_id;
+    }
+
+    public function restore(User $user, Category $category): bool
+    {
+        return false;
+    }
+
+    public function forceDelete(User $user, Category $category): bool
+    {
+        return false;
     }
 }
