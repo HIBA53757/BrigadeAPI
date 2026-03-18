@@ -3,6 +3,8 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\PlatController;
 use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\Api\IngredientController;
+use App\Http\Controllers\Api\ProfileController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/register', [AuthController::class, 'register']);
@@ -29,6 +31,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/categories/{category}', [CategoryController::class, 'destroy']);
 
     Route::post('/categories/{category}/plats', [CategoryController::class, 'addPlats']);
-
+//profil 
+    Route::get('/profile', [ProfileController::class, 'show']);
+    Route::put('/profile', [ProfileController::class, 'update']);
+    Route::post('/plats/{plat}/ingredients', [IngredientController::class, 'attachToPlat']);
 
 });

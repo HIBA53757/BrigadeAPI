@@ -28,6 +28,10 @@ class User extends Authenticatable
     'dietary_tags'
 ];
 
+protected $casts = [
+    'dietary_tags' => 'array', 
+];
+
     /**
      * The attributes that should be hidden for serialization.
      *
