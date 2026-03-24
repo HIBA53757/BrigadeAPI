@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class recommendations extends Model
+class Recommendation extends Model
 {  
     protected $fillable = [
     'user_id',

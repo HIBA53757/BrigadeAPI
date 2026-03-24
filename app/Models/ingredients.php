@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class ingredients extends Model
+class Ingredients extends Model
 {
     protected $fillable = [
     'name',
@@ -13,6 +13,9 @@ class ingredients extends Model
     protected $casts = ['tags' => 'array'];
 
 public function plats() {
-    return $this->belongsToMany(Plat::class);
+    return $this->belongsToMany(Plat::class,
+    'ingredient_plat', 
+        'ingredient_id', 
+        'plat_id');
 }
 }

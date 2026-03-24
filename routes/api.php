@@ -23,7 +23,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('/plats/{plat}', [PlatController::class, 'destroy']);
 
 //category
-
     Route::get('/categories', [CategoryController::class, 'index']);
     Route::post('/categories', [CategoryController::class, 'store']);
     Route::get('/categories/{category}', [CategoryController::class, 'show']);
@@ -34,6 +33,10 @@ Route::middleware('auth:sanctum')->group(function () {
 //profil 
     Route::get('/profile', [ProfileController::class, 'show']);
     Route::put('/profile', [ProfileController::class, 'update']);
+ 
+    //ingredient
+    Route::get('/ingredients', [IngredientController::class, 'index']);
+    Route::post('/ingredients', [IngredientController::class, 'store']);
     Route::post('/plats/{plat}/ingredients', [IngredientController::class, 'attachToPlat']);
 
 });

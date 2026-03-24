@@ -16,8 +16,8 @@ return new class extends Migration
     $table->string('nom', 100);
     $table->text('description')->nullable();
     $table->decimal('prix', 8, 2);
-    $table->foreignId('category_id')->constrained()->cascadeOnDelete(); // Relation 1-N
-    $table->foreignId('user_id')->constrained()->cascadeOnDelete(); // Admin créateur
+    $table->foreignId('user_id')->constrained()->cascadeOnDelete(); 
+    $table->foreignId('category_id')->nullable()->constrained()->nullOnDelete();
     $table->timestamps();
 });
     }

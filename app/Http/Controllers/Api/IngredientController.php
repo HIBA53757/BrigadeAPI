@@ -3,8 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Ingredient;
-use App\Models\ingredients;
+use App\Models\Ingredients;
 use App\Models\Plat;
 use Illuminate\Http\Request;
 

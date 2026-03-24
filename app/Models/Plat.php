@@ -4,9 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use app\Models\ingredients;
-use app\Models\recommendations;
-use app\Models\Category;
+use App\Models\Ingredients;
+use App\Models\recommendations;
+use App\Models\Category;
 
 class Plat extends Model
 {
@@ -17,7 +17,7 @@ class Plat extends Model
         'description',
         'prix',
         'user_id',
-        'category_id',
+       'category_id',
     ];
 
     public function user()
@@ -29,7 +29,7 @@ class Plat extends Model
     return $this->belongsTo(Category::class);
 }
 public function ingredients() {
-    return $this->belongsToMany(ingredients::class);
+    return $this->belongsToMany(ingredients::class , 'ingredient_plat' ,'plat_id' ,'ingredient_id' );
 }
 
 public function recommendations() {
