@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\PlatController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\IngredientController;
 use App\Http\Controllers\Api\ProfileController;
+use App\Http\Controllers\Api\RecommendationController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/register', [AuthController::class, 'register']);
@@ -39,4 +40,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/ingredients', [IngredientController::class, 'store']);
     Route::post('/plats/{plat}/ingredients', [IngredientController::class, 'attachToPlat']);
 
+    //recommendation
+    Route::post('/recommendations/analyze/{plate_id}', [RecommendationController::class, 'analyze']);
 });

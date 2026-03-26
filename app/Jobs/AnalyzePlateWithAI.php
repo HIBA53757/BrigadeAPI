@@ -1,4 +1,5 @@
-<?php 
+<?php
+
 namespace App\Jobs;
 
 use App\Models\Recommendation;
@@ -7,11 +8,14 @@ use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class AnalyzePlateWithAI implements ShouldQueue
 {
-    use Dispatchable, Queueable;
+    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public function __construct(
         public User $user,
@@ -24,42 +28,62 @@ class AnalyzePlateWithAI implements ShouldQueue
         $ingredients = $this->plat->ingredients->pluck('tags')->flatten()->unique()->implode(', ');
         $restrictions = implode(', ', $this->user->dietary_tags ?? []);
 
-        $prompt = "Analyze the nutritional compatibility between this dish and the user's dietary restrictions.
-        DISH: {$this->plat->nom}
-        INGREDIENT TAGS: {$ingredients}
-        USER RESTRICTIONS: {$restrictions}
+        $prompt = "Analyze nutritional compatibility. 
+        DISH: {$this->plat->nom}. 
+        INGREDIENTS: {$ingredients}. 
+        USER RESTRICTIONS: {$restrictions}.
+        Respond ONLY with JSON: {\"score\": 0-100, \"warning_message\": \"message en français\"}";
 
-        Tag mapping rules:
-        'vegan' conflicts with: contains_meat, contains_lactose
-        'no_sugar' conflicts with: contains_sugar
-        'no_cholesterol' conflicts with: contains_cholesterol
-        'gluten_free' conflicts with: contains_gluten
-        'no_lactose' conflicts with: contains_lactose
+        try {
+    
+            $response = Http::withToken(config('services.groq.key'))
+                ->post('https://api.groq.com/openai/v1/chat/completions', [
+                    'model' => 'llama-3.1-8b-instant',
+                    'messages' => [['role' => 'user', 'content' => $prompt]],
+                    'temperature' => 0
+                ]);
 
-        Calculate score: start at 100, subtract 25 for each conflict found.
-        Respond ONLY with this JSON (no markdown, no explanation):
-        {\"score\": <0-100>, \"warning_message\": \"<en français si score < 50, sinon chaine vide>\"}";
+            if ($response->successful()) {
+                $rawText = $response->json()['choices'][0]['message']['content'] ?? '';
+                
+                Log::info("IA RAW RESPONSE: " . $rawText);
 
-        $response = Http::withToken(config('services.groq.key'))
-            ->post('https://api.groq.com/openai/v1/chat/completions', [
-                'model' => 'llama3-8b-8192', 
-                'messages' => [
-                    ['role' => 'user', 'content' => $prompt]
-                ],
-                'temperature' => 0 
-            ]);
+                $result = $this->parseResponse($rawText);
+                $this->recommendation->update([
+                    'score'           => $result['score'],
+                    'label'           => $result['label'],
+                    'warning_message' => $result['warning_message'],
+                    'status'          => 'ready' 
+                ]);
+                
+                Log::info("Recommendation {$this->recommendation->id} updated to ready.");
+            } else {
+                Log::error("Groq API Error: " . $response->body());
+            }
+        } catch (\Exception $e) {
+            Log::error("Job Failed: " . $e->getMessage());
+        }
+    }
 
-        $result = json_decode($response->json()['choices'][0]['message']['content'], true);
+    private function parseResponse(string $text): array
+    {
+        $text = preg_replace('/```json|```/', '', $text);
+        $text = trim($text);
+        preg_match('/{.*}/s', $text, $matches);
+        $data = json_decode($matches[0] ?? '{}', true);
 
-        $label = 'Highly Recommended';
-        if ($result['score'] < 80) $label = 'Recommended with notes';
-        if ($result['score'] < 50) $label = 'Not Recommended';
+        $score = isset($data['score']) ? max(0, min(100, (int) $data['score'])) : 50;
+        
+        $label = match(true) {
+            $score >= 80 => 'Highly Recommended',
+            $score >= 50 => 'Recommended with notes',
+            default      => 'Not Recommended',
+        };
 
-        $this->recommendation->update([
-            'score' => $result['score'],
-            'label' => $label,
-            'warning_message' => $result['warning_message'],
-            'status' => 'ready'
-        ]);
+        return [
+            'score'           => $score,
+            'label'           => $label,
+            'warning_message' => $data['warning_message'] ?? 'Analyse terminée.',
+        ];
     }
 }

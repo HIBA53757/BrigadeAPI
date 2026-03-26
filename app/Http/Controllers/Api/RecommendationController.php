@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
@@ -9,33 +10,37 @@ use Illuminate\Http\Request;
 
 class RecommendationController extends Controller
 {
-    public function analyze(Plat $plat)
+    public function analyze($plat_id)
     {
+          $plat = Plat::findOrFail($plat_id);
+
         $rec = Recommendation::create([
             'user_id' => auth()->id(),
             'plat_id' => $plat->id,
-            'status' => 'processing'
+            'status'  => 'processing'
         ]);
 
-        AnalyzePlateWithAI::dispatch(auth()->user(), $plat, $rec);
+      
+           $job = new AnalyzePlateWithAI(auth()->user(), $plat, $rec);
+  $job->handle(); 
+        $rec->refresh();
 
         return response()->json([
-            'message' => 'L\'analyse IA (Llama) a commencé.',
+                  'message' => 'Analyse terminée par l\'IA',
             'recommendation_id' => $rec->id,
-            'status' => 'processing'
-        ], 202);
+            'score' => $rec->score,
+             'label' => $rec->label,
+            'warning_message' => $rec->warning_message,
+            'status' => $rec->status
+        ], 200);
     }
 
-    public function index()
-    {
-        return Recommendation::where('user_id', auth()->id())->with('plat')->get();
-    }
-
-    public function show($plate_id)
+        public function show($plate_id)
     {
         return Recommendation::where('user_id', auth()->id())
-                             ->where('plat_id', $plate_id)
-                             ->latest()
-                             ->firstOrFail();
+                           
+    ->where('plat_id', $plate_id)
+            ->latest()
+                     ->firstOrFail();
     }
 }
