@@ -43,4 +43,6 @@ Route::middleware('auth:sanctum')->group(function () {
     //recommendation
     Route::post('/recommendations/analyze/{plate_id}', [RecommendationController::class, 'analyze']);
     Route::get('/recommendations/{recommendation_id}', [RecommendationController::class, 'show']);
+
+    Route::middleware('auth:sanctum')->get('/admin/stats', [RecommendationController::class, 'adminStats']);
 });
