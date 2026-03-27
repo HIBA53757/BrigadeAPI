@@ -56,6 +56,12 @@ protected $casts = [
     }
 
     public function recommendations() {
-    return $this->hasMany(Recommendations::class);
+    return $this->hasMany(Recommendation::class);
 }
+
+public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
+    }
+
 }

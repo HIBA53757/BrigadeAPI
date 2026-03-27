@@ -18,7 +18,8 @@ class PlatController extends Controller
 
     
     public function store(Request $request)
-    {
+
+    {    $this->authorize('create', Plat::class);
         $request->validate([
             'nom' => 'required|string|max:255',
             'description' => 'nullable|string',
@@ -68,5 +69,12 @@ class PlatController extends Controller
         return response()->json(['message' => 'Plat supprimé']);
     }
 
+    public function attachIngredients(Request $request, Plat $plat)
+{
+    $this->authorize('update', $plat); 
+
+    $plat->ingredients()->sync($request->ingredient_ids);
     
+    return response()->json(['message' => 'Ingrédients mis à jour']);
+}
 }

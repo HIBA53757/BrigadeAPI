@@ -3,8 +3,10 @@
 namespace App\Providers;
 
 use App\Models\Category;
+use App\Models\Ingredients;
 use App\Models\Plat;
 use App\Policies\CategoryPolicy;
+use App\Policies\IngredientPolicy;
 use App\Policies\PlatPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
@@ -15,6 +17,7 @@ class AppServiceProvider extends ServiceProvider
     protected $policies = [
         Plat::class => PlatPolicy::class,
         Category::class => CategoryPolicy::class,
+        Ingredients::class => IngredientPolicy::class,
     ];
 
     public function register(): void
