@@ -10,37 +10,27 @@ use Illuminate\Http\Request;
 
 class RecommendationController extends Controller
 {
-    public function analyze($plat_id)
-    {
-          $plat = Plat::findOrFail($plat_id);
+   public function analyze($plat_id)
+{
+    $plat = Plat::findOrFail($plat_id);
 
-        $rec = Recommendation::create([
-            'user_id' => auth()->id(),
-            'plat_id' => $plat->id,
-            'status'  => 'processing'
-        ]);
+    $rec = Recommendation::create([
+        'user_id' => auth()->id(),
+        'plat_id' => $plat->id,
+        'status'  => 'processing'
+    ]);
 
-      
-           $job = new AnalyzePlateWithAI(auth()->user(), $plat, $rec);
-  $job->handle(); 
-        $rec->refresh();
+    AnalyzePlateWithAI::dispatch(auth()->user(), $plat, $rec);
 
-        return response()->json([
-                  'message' => 'Analyse terminée par l\'IA',
-            'recommendation_id' => $rec->id,
-            'score' => $rec->score,
-             'label' => $rec->label,
-            'warning_message' => $rec->warning_message,
-            'status' => $rec->status
-        ], 200);
-    }
-
-        public function show($plate_id)
-    {
-        return Recommendation::where('user_id', auth()->id())
-                           
-    ->where('plat_id', $plate_id)
-            ->latest()
-                     ->firstOrFail();
-    }
+    return response()->json([
+        'message' => 'Analyse lancée en arrière-plan',
+        'recommendation_id' => $rec->id,
+        'status' => 'processing'
+    ], 202); 
+}
+public function show($recommendation_id) 
+{
+    return Recommendation::where('user_id', auth()->id())
+                         ->findOrFail($recommendation_id);
+}
 }
