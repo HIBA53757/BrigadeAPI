@@ -12,8 +12,8 @@ class PlatController extends Controller
  
     public function index()
     {
-        $plats = Plat::where('user_id', auth()->id())->get();
-        return response()->json($plats);
+       $plats = Plat::all();
+       return response()->json($plats);
     }
 
     
